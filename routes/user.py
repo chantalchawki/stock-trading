@@ -36,8 +36,10 @@ async def find_user(body: FindUserRequest):
     orders = []
     stocks = []
     for order in res.orders:
-        orders.append(Order(price=order.price, stock_id=order.stock_id))
-    return FindUserResponse(name=res.name, fund=res.fund, orders=orders)
+        orders.append(Order(price=order.price, number_of_stocks=order.number_of_stocks, stock_id=order.stock_id, created_at=order.created_at, type=order.type))
+    for stock in res.stocks:
+        stocks.append(Stock(stock_id=stock.stock_id, number=stock.number))
+    return FindUserResponse(name=res.name, fund=res.fund, orders=orders, stocks=stocks)
 
 @user.put('/deposit', status_code=200)
 async def deposit_amount(body: FundUserRequest):

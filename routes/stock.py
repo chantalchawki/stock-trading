@@ -64,16 +64,19 @@ async def find_stock(body: FindStockRequest):
             }]
 
         data = Stock.objects().aggregate(pipeline).next()
-        Stock.objects(stock_id=body.stock_id).update_one(set__max_price_hour=data["maxPriceHour"], set__max_price_day=data["maxPriceDay"], set__min_price_hour=data["minPriceHour"], set__min_price_day=data["minPriceDay"])
         res = Stock.objects.get(stock_id=body.stock_id)
+        if data["maxPriceHour"] == None:
+            return FindStockResponse(name=res.name, price=res.price, availability=res.availability, max_price_day=res.max_price_day, max_price_hour=res.max_price_hour, min_price_day=res.min_price_day, min_price_hour=res.min_price_hour)
 
-        return FindStockResponse(name=res.name, price=res.price, availability=res.availability, max_price_day=data["maxPriceDay"], max_price_hour=data["maxPriceHour"], min_price_day=data["minPriceDay"], min_price_hour=data["minPriceHour"])
+        else:
+            Stock.objects(stock_id=body.stock_id).update_one(set__max_price_hour=data["maxPriceHour"], set__max_price_day=data["maxPriceDay"], set__min_price_hour=data["minPriceHour"], set__min_price_day=data["minPriceDay"])
+            return FindStockResponse(name=res.name, price=res.price, availability=res.availability, max_price_day=data["maxPriceDay"], max_price_hour=data["maxPriceHour"], min_price_day=data["minPriceDay"], min_price_hour=data["minPriceHour"])
+
     except:
         return JSONResponse(status_code=404, content={"message": "stock not found"})
 
 @stock.post('/sell', status_code=202)
 async def sell_stock(body: OrderStockRequest):
-    print("SELL STOCK")
     sell = SellHandler()
     status = sell.handle(body)
     if status == False:
@@ -85,7 +88,6 @@ async def sell_stock(body: OrderStockRequest):
 
 @stock.post('/buy', status_code=202)
 async def buy_stock(body: OrderStockRequest):
-    print("BUY STOCK")
     buy = BuyHandler()
     status = buy.handle(body)
     if status == False:
