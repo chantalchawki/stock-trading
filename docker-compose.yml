@@ -1,0 +1,34 @@
+version: '3.5'
+
+services:
+
+    vernemq:
+        environment:
+            - DOCKER_VERNEMQ_ACCEPT_EULA=yes
+            - DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on
+            - MQTT_TOPIC=thndr-trading
+        image: erlio/docker-vernemq
+        ports:
+            - 1883:1883 
+        expose:
+            - 1883
+
+    streamer:
+        environment:
+            - MQTT_HOST=vernemq
+            - MQTT_PORT=1883
+            - MQTT_TOPIC=thndr-trading
+        image: thndr/streamer:0.2
+        depends_on:
+            - vernemq
+
+    database:
+        image: mongo
+        ports:
+            - 27017:27017
+        volumes:
+            - db-volume:/data/db
+
+volumes:
+    db-volume:
+
